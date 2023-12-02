@@ -2,7 +2,7 @@
 
 Powershell tool for updating Rust Experimental server and installing/updating addons (Oxide, Carbon, etc)
 
-![](RustErShell.png)
+![](Resources/RustErShell.png)
 
 Platforms:
  * Windows
