@@ -17,6 +17,8 @@ $pathFileSteamCmd = "$pathFolderSteamCmd\steamcmd.exe"
 $pathFileTemp = "$pathFolderAppDataLocal\Temp.zip"
 $pathFileStartBat = "$pathFolderRoot\Example.bat"
 $pathFileServerCfg = "$pathFolderServerCfg\server.cfg"
+$pathFileRustDedicated = "$pathFolderServer\RustDedicated.exe"
+$pathFileOxide = "$pathFolderServer\RustDedicated_Data\Managed\Oxide.Core.dll"
 
 # Functions
 function InstallSteamCMD 
@@ -138,8 +140,6 @@ function CheckOptions
     {
         InstallCarbon
     }
-
-    Write-Host $option.GetType()
 }
 
 # Load
@@ -155,14 +155,25 @@ function Load
     Write-Host "     ##     ##  #######   ######     ##    ######## ##     ##        ######  ##     ## ######## ######## ######## "
     Write-Host "====================================================================================================================="
 
-    $host.ui.RawUI.WindowTitle = "RustErShell v3 ($pathFolderServer)"
+    $title = "RustErShell v4 ($pathFolderServer)";
+    $isCarbon = Test-Path -Path $pathFolderCarbon -PathType Container
+    $isOxide = Test-Path -Path $pathFileOxide
+    $isServer = Test-Path -Path $pathFileRustDedicated
+    $host.ui.RawUI.WindowTitle = $title
+
+
+    Write-Host $title
+    Write-Host " * Server: $isServer"
+    Write-Host " * Oxide: $isOxide"
+    Write-Host " * Carbon: $isCarbon"
+    Write-Host "====================================================================================================================="
 
     # Create Server Directory
     if (!(Test-Path -Path $pathFolderServer -PathType Container))
     {
         $null = New-Item -Path $pathFolderServer -ItemType "directory"
     }
-    
+
     PrintOptions
     $option = Read-Host "Option"
     CheckOptions -option $option.ToString()
