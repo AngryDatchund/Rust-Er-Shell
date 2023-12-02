@@ -16,13 +16,13 @@ Powershell tool for updating Rust Experimental server and installing/updating ad
 4) It will create subdirectory called RustServer where server will be located
 5) Select one of options from console
 
-### !!! Warning !!!
+### ⚠️ Warning ⚠️
  * If you are using option to create 'example' Example.bat and server.cfg files, be sure to check and change some options (they are mostly designed for lazy dev server using, like custom map, disabled ground protection, etc)
 
-### Platforms:
+### 🖥️ Platforms:
  * Windows
 
-### Download:
+### 📁 Download:
  * [Click Here](https://github.com/AngryDatchund/Rust-Er-Shell/blob/main/RustErShell.ps1)
 
 ### Plans:
