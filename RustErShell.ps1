@@ -1,3 +1,6 @@
+# Preset (check line 28, set one of options example: 12)
+$defaultOption = ""
+
 # URL
 $urlSteamCmd = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
 $urlOxide = "https://github.com/OxideMod/Oxide.Rust/releases/latest/download/Oxide.Rust.zip"
@@ -7,6 +10,7 @@ $urlTestMap = "https://github.com/AngryDatchund/Rust-Er-Shell/raw/main/Resources
 # Folders
 $pathFolderRoot = $PSScriptRoot;
 $pathFolderServer = "$pathFolderRoot\RustServer"
+$pathFolderManaged = "$pathFolderServer\RustDedicated_Data\Managed"
 $pathFolderAppDataLocal = "$env:LOCALAPPDATA\RustErShell"
 $pathFolderSteamCmd = "$pathFolderAppDataLocal\SteamCMD"
 $pathFolderCarbon = "$pathFolderServer\carbon"
@@ -21,6 +25,19 @@ $pathFileRustDedicated = "$pathFolderServer\RustDedicated.exe"
 $pathFileOxide = "$pathFolderServer\RustDedicated_Data\Managed\Oxide.Core.dll"
 
 # Functions
+function PrintOptions
+{
+    Write-Host "Select option:"
+    Write-Host "1 - Install/Update Server"
+    Write-Host "2 - Install Oxide"
+    Write-Host "3 - Install Carbon"
+    Write-Host "-------------------------"
+    Write-Host "4 - Add Example.bat and server.cfg"
+    Write-Host "0 - !!! Uninstall All Mods !!!"
+    Write-Host "-------------------------"
+    Write-Host "Use numbers for multiple selection: 12 (Server + Oxide), 124 (Server + Oxide + Examples), etc"
+}
+
 function InstallSteamCMD 
 {
     if (Test-Path($pathFileSteamCmd))
@@ -44,7 +61,7 @@ function UpdateServer
 
 function InstallCarbon 
 {
-    if (Test-Path ($pathFolderCarbon))
+    if (Test-Path ($pathFolderCarbon) -PathType Container)
     {
         Write-Host "[CARBON] Carbon is already installed"
     }
@@ -53,6 +70,23 @@ function InstallCarbon
         Write-Host "[CARBON] Installing Carbon..."
         DownloadAndExtract -url $urlCarbon -extractPath $pathFolderServer
         Write-Host "[CARBON] Carbon was installed!"
+    }
+}
+
+function UninstallCarbon()
+{
+    if (Test-Path ($pathFolderCarbon) -PathType Container)
+    {
+        Remove-Item $pathFolderCarbon -Recurse
+    }
+}
+
+function UninstallOxide()
+{
+    if (Test-Path ($pathFileOxide))
+    {
+        Remove-Item $pathFolderManaged -Recurse
+        UpdateServer
     }
 }
 
@@ -104,21 +138,16 @@ function DownloadAndExtract
     }
 }
 
-function PrintOptions
-{
-    Write-Host "Select option:"
-    Write-Host "1 - Install/Update Server"
-    Write-Host "2 - Install Oxide"
-    Write-Host "3 - Install Carbon"
-    Write-Host "-------------------------"
-    Write-Host "4 - Add Example.bat and server.cfg"
-    Write-Host "-------------------------"
-    Write-Host "Use numbers for multiple selection: 12 (Server + Oxide), 124 (Server + Oxide + Examples), etc"
-}
-
 function CheckOptions 
 {
     param ([string] $option)
+
+    if ($option -eq "0")
+    {
+        Write-Host "Uninstalling all mods and updating server..."
+        UninstallCarbon
+        UninstallOxide
+    }
 
     if ($option.Contains("4"))
     {
@@ -155,12 +184,11 @@ function Load
     Write-Host "     ##     ##  #######   ######     ##    ######## ##     ##        ######  ##     ## ######## ######## ######## "
     Write-Host "====================================================================================================================="
 
-    $title = "RustErShell v4 ($pathFolderServer)";
+    $title = "RustErShell v5 ($pathFolderServer)";
     $isCarbon = Test-Path -Path $pathFolderCarbon -PathType Container
     $isOxide = Test-Path -Path $pathFileOxide
     $isServer = Test-Path -Path $pathFileRustDedicated
     $host.ui.RawUI.WindowTitle = $title
-
 
     Write-Host $title
     Write-Host " * Server: $isServer"
@@ -175,7 +203,16 @@ function Load
     }
 
     PrintOptions
-    $option = Read-Host "Option"
+
+    if ($defaultOption -eq "")
+    {
+        $option = Read-Host "Option"
+    }
+    else
+    {
+        $option = $defaultOption
+    }
+  
     CheckOptions -option $option.ToString()
 }
 
