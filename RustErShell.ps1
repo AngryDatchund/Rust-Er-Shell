@@ -1,6 +1,3 @@
-# Preset (check line 28, set one of options example: 12)
-$defaultOption = ""
-
 # URL
 $urlSteamCmd = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
 $urlOxide = "https://github.com/OxideMod/Oxide.Rust/releases/latest/download/Oxide.Rust.zip"
@@ -19,25 +16,12 @@ $pathFolderServerCfg = "$pathFolderServer\server\example\cfg"
 # Files
 $pathFileSteamCmd = "$pathFolderSteamCmd\steamcmd.exe"
 $pathFileTemp = "$pathFolderAppDataLocal\Temp.zip"
-$pathFileStartBat = "$pathFolderRoot\Example.bat"
 $pathFileServerCfg = "$pathFolderServerCfg\server.cfg"
 $pathFileRustDedicated = "$pathFolderServer\RustDedicated.exe"
 $pathFileOxide = "$pathFolderServer\RustDedicated_Data\Managed\Oxide.Core.dll"
+$pathFileConfig = "$pathFolderRoot\RustErShell.cfg"
 
 # Functions
-function PrintOptions
-{
-    Write-Host "Select option:"
-    Write-Host "1 - Install/Update Server"
-    Write-Host "2 - Install Oxide"
-    Write-Host "3 - Install Carbon"
-    Write-Host "-------------------------"
-    Write-Host "4 - Add Example.bat and server.cfg"
-    Write-Host "0 - !!! Uninstall All Mods !!!"
-    Write-Host "-------------------------"
-    Write-Host "Use numbers for multiple selection: 12 (Server + Oxide), 124 (Server + Oxide + Examples), etc"
-}
-
 function InstallSteamCMD 
 {
     if (Test-Path($pathFileSteamCmd))
@@ -97,25 +81,34 @@ function InstallOxide
     Write-Host "[OXIDE] Oxide was installed!"
 }
 
-function CreateExamples
+function CreateFolders
 {
-    Write-Host "Creating example bat and cfg files"
-
-    # Create Example Bat
-    if (!(Test-Path $pathFileStartBat))
+    # Create Server Directory
+    if (!(Test-Path -Path $pathFolderServer -PathType Container))
     {
-        $null = New-Item -Path $pathFileStartBat -Value "cd RustServer`n:start`nRustDedicated.exe -batchmode -nographics -logFile Log.txt +server.identity ""example"" +oxide.directory ""server/example/oxide/""`ntimeout /t 10 /nobreak`ngoto start"
+        $null = New-Item -Path $pathFolderServer -ItemType "directory"
     }
-   
+
     # Create Example server.cfg
     if (!(Test-Path $pathFileServerCfg))
     {
+        Write-Host "Creating server.cfg"
+
         if (!(Test-Path $pathFolderServerCfg))
         {
             $null = New-Item -Path $pathFolderServerCfg -ItemType "directory"
         }
         
         $null = New-Item -Path $pathFileServerCfg -Value "server.worldsize 1500`nserver.maxplayers 5`nfps.limit 256`nbaseboat.generate_paths 0`nantihack.terrain_kill false`nantihack.terrain_protection false`ncensorplayerlist true`nserver.secure false`nserver.levelurl ""$urlTestMap"""
+    }
+}
+
+function StartServer 
+{
+    if (Test-Path $pathFileRustDedicated)
+    {
+        Write-Host "Starting server"
+        Start-Process $pathFileRustDedicated -WorkingDirectory $pathFolderServer -ArgumentList "-batchmode -nographics -logFile Log.txt +server.identity ""example"" +oxide.directory ""server/example/oxide/"""
     }
 }
 
@@ -149,11 +142,6 @@ function CheckOptions
         UninstallOxide
     }
 
-    if ($option.Contains("4"))
-    {
-        CreateExamples
-    }
-
     if ($option.Contains("1"))
     {
         InstallSteamCMD
@@ -169,6 +157,24 @@ function CheckOptions
     {
         InstallCarbon
     }
+
+    if ($option.Contains("9"))
+    {
+        StartServer
+    }
+}
+
+function PrintOptions
+{
+    Write-Host "Select option:"
+    Write-Host "1 - Install/Update Server"
+    Write-Host "2 - Install Oxide"
+    Write-Host "3 - Install Carbon"
+    Write-Host "-------------------------"
+    Write-Host "9 - Start server after update"
+    Write-Host "0 - !!! Uninstall All Mods !!!"
+    Write-Host "-------------------------"
+    Write-Host "You can select multiple options at once"
 }
 
 # Load
@@ -184,7 +190,7 @@ function Load
     Write-Host "     ##     ##  #######   ######     ##    ######## ##     ##        ######  ##     ## ######## ######## ######## "
     Write-Host "====================================================================================================================="
 
-    $title = "RustErShell v5 ($pathFolderServer)";
+    $title = "RustErShell v6 ($pathFolderServer)";
     $isCarbon = Test-Path -Path $pathFolderCarbon -PathType Container
     $isOxide = Test-Path -Path $pathFileOxide
     $isServer = Test-Path -Path $pathFileRustDedicated
@@ -196,24 +202,30 @@ function Load
     Write-Host " * Carbon: $isCarbon"
     Write-Host "====================================================================================================================="
 
-    # Create Server Directory
-    if (!(Test-Path -Path $pathFolderServer -PathType Container))
+    CreateFolders
+    
+    $option = ""
+
+    if (Test-Path -Path $pathFileConfig)
     {
-        $null = New-Item -Path $pathFolderServer -ItemType "directory"
+        $content = Get-Content -Path $pathFileConfig
+        $option = $content
+        Write-Host "Options selected from config: $option"
+        Start-Sleep 3
+    }
+    else 
+    {
+        $null = New-Item -Path $pathFileConfig -ItemType File
     }
 
-    PrintOptions
-
-    if ($defaultOption -eq "")
+    if (($null -eq $option) -or ($option -eq ""))
     {
+        PrintOptions
         $option = Read-Host "Option"
     }
-    else
-    {
-        $option = $defaultOption
-    }
-  
+   
     CheckOptions -option $option.ToString()
+    Start-Sleep 3
 }
 
 # Start
